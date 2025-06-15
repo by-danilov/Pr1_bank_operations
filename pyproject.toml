@@ -1,16 +1,41 @@
-[project]
-name = "pr1-bank-operations"
+[tool.poetry]
+name = "Pr1_bank_operations"
 version = "0.1.0"
 description = ""
-authors = [
-    {name = "Nikita Danilov",email = "danilovn1@mail.ru"}
-]
+authors = ["TG: @by_danilov"]
 readme = "README.md"
-requires-python = ">=3.13"
-dependencies = [
-]
+packages = [{include = "src"}]
 
+[tool.poetry.dependencies]
+python = "^3.9"
+pandas = "^2.2.2"
+openpyxl = "^3.1.2"
+requests = "^2.31.0"
+python-dotenv = "^1.0.1"
+poetry-core = "^2.1.3"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.2.2"
+pytest-mock = "^3.14.0"
 
 [build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
+requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 119
+exclude = '''
+/(
+    \.git
+  | \.venv
+)/
+'''
+
+[tool.isort]
+line_length = 119
+
+[tool.mypy]
+disallow_untyped_defs = true
+warn_return_any = true
+exclude = "venv"
