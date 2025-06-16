@@ -1,13 +1,13 @@
 import json
-from datetime import datetime
-from typing import Dict, Any, Optional
 import logging
+from datetime import datetime
+from typing import Any, Dict, Optional
 
 # Настройка логирования
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.ERROR) # Уровень логирования можно изменить на INFO для отладки
+logger.setLevel(logging.ERROR)  # Уровень логирования можно изменить на INFO для отладки
 handler = logging.StreamHandler()
-formatter = logging.Formatter('%(levelname)s\t%(name)s:%(filename)s:%(lineno)d %(message)s')
+formatter = logging.Formatter("%(levelname)s\t%(name)s:%(filename)s:%(lineno)d %(message)s")
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
@@ -32,7 +32,7 @@ def load_user_settings(file_path: str) -> Dict[str, Any]:
     Загружает пользовательские настройки из JSON-файла.
     """
     try:
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             settings = json.load(f)
         return settings
     except FileNotFoundError:
