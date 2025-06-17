@@ -2,14 +2,13 @@ import datetime
 import json
 import logging
 import os
-from unittest.mock import call, mock_open, patch
+from unittest.mock import mock_open, patch
 
 import pandas as pd
 import pytest
 
 # Импортируем тестируемые функции и декораторы
 from src.reports import log_and_save_report
-from src.reports import logger as reports_logger
 from src.reports import spending_by_weekday
 
 
@@ -307,7 +306,7 @@ def test_log_and_save_report_default_filename(sample_transactions_df, caplog):
 
         caplog.set_level(logging.INFO, logger="src.reports")
 
-        report_result = dummy_report_function(sample_transactions_df)
+        dummy_report_function(sample_transactions_df)
 
         expected_filename_base = "dummy_report_function_report_20240510_123000.json"
 
@@ -323,7 +322,7 @@ def test_log_and_save_report_default_filename(sample_transactions_df, caplog):
         assert actual_call_args[1] == {"encoding": "utf-8"}
 
         # Проверяем, что информация о сохранении попала в лог
-        assert f"Отчет 'dummy_report_function' сохранен в файл:" in caplog.text
+        assert f"Отчет '{dummy_report_function.__name__}' сохранен в файл:" in caplog.text
         assert expected_filename_base in caplog.text  # Проверяем, что имя файла есть в сообщении
 
 
@@ -340,7 +339,7 @@ def test_log_and_save_report_custom_filename(sample_transactions_df, caplog):
 
         caplog.set_level(logging.INFO, logger="src.reports")
 
-        report_result = custom_report_function(sample_transactions_df)
+        custom_report_function(sample_transactions_df)
 
         # Проверяем, что open был вызван с путем, заканчивающимся на пользовательское имя файла
         mock_file.assert_called_once()
@@ -349,7 +348,7 @@ def test_log_and_save_report_custom_filename(sample_transactions_df, caplog):
         assert actual_call_args[0][1] == "w"
         assert actual_call_args[1] == {"encoding": "utf-8"}
 
-        assert f"Отчет 'custom_report_function' сохранен в файл:" in caplog.text
+        assert f"Отчет '{custom_report_function.__name__}' сохранен в файл:" in caplog.text
         assert custom_filename in caplog.text
 
 
@@ -384,8 +383,8 @@ def test_log_and_save_report_non_dataframe_result(caplog):
     with patch("builtins.open", mock_open()) as mock_file:
         caplog.set_level(logging.INFO, logger="src.reports")
 
-        dict_result = dict_report_function()
-        string_result = string_report_function()
+        dict_report_function()
+        string_report_function()
 
         # Проверяем, что mock_file был вызван дважды
         assert mock_file.call_count == 2
@@ -424,11 +423,11 @@ def test_log_and_save_report_error_logging(sample_transactions_df, caplog):
 
         caplog.set_level(logging.ERROR, logger="src.reports")
 
-        report_result = failing_report_function(sample_transactions_df)
+        failing_report_function(sample_transactions_df)
 
         expected_filename_base = "failing_report_function_report_20240510_123000.json"
 
         # Проверяем, что в логе присутствует сообщение об ошибке с базовым именем файла
-        assert f"Ошибка при сохранении отчета 'failing_report_function' в файл" in caplog.text
+        assert f"Ошибка при сохранении отчета '{failing_report_function.__name__}' в файл" in caplog.text
         assert expected_filename_base in caplog.text
         assert "Permission denied" in caplog.text

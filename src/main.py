@@ -1,14 +1,10 @@
 import datetime
 import json
 import os
-
 import pandas as pd
 from dotenv import load_dotenv
-
 from src.reports import spending_by_weekday
-from src.services import investment_bank  # <--- убедитесь, что investment_bank импортируется
-from src.utils import get_greeting, load_user_settings
-# Импортируем функции из других модулей src
+from src.services import investment_bank
 from src.views import main_page, read_transactions
 
 

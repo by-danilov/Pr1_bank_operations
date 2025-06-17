@@ -3,7 +3,7 @@ import json
 import logging
 import os
 from functools import wraps
-from typing import Any, Callable, Optional, Union
+from typing import Any, Callable, Optional
 
 import pandas as pd
 

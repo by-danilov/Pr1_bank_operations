@@ -1,13 +1,8 @@
-import datetime
-import json  # <--- Добавляем импорт json
+import json
 from unittest.mock import MagicMock, patch
-
 import pandas as pd
 import pytest
 import requests
-
-from src.utils import get_greeting, load_user_settings  # ИМПОРТ ИЗ UTILS
-# Предполагаем, что main_page находится в src.views
 from src.views import fetch_currency_rates, fetch_stock_prices, main_page
 
 

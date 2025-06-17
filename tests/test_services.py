@@ -1,6 +1,4 @@
 import logging
-from datetime import datetime
-from unittest.mock import MagicMock, patch  # Добавил MagicMock для потенциальных будущих моков
 
 import pytest
 
