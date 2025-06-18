@@ -1,15 +1,15 @@
 import datetime
 import logging
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 # Настройка логирования для модуля services
 logger = logging.getLogger(__name__)
 # ИЗМЕНИТЕ ЭТУ СТРОКУ:
-logger.setLevel(logging.WARNING) # Измените на INFO или WARNING, чтобы видеть сообщения
-                              # ниже уровня ERROR (например, WARNING, которые
-                              # генерируются при пропуске транзакций)
+logger.setLevel(logging.WARNING)  # Измените на INFO или WARNING, чтобы видеть сообщения
+# ниже уровня ERROR (например, WARNING, которые
+# генерируются при пропуске транзакций)
 handler = logging.StreamHandler()
-formatter = logging.Formatter('%(levelname)s\t%(name)s:%(filename)s:%(lineno)d %(message)s')
+formatter = logging.Formatter("%(levelname)s\t%(name)s:%(filename)s:%(lineno)d %(message)s")
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
@@ -34,7 +34,7 @@ def investment_bank(month: str, transactions: List[Dict[str, Any]], limit: int) 
         return 0.0
 
     total_invested_amount = 0.0
-    target_year, target_month = map(int, month.split('-'))
+    target_year, target_month = map(int, month.split("-"))
 
     for transaction in transactions:
         try:
@@ -68,7 +68,8 @@ def investment_bank(month: str, transactions: List[Dict[str, Any]], limit: int) 
                     invested_amount = rounded_amount - abs_amount
                     total_invested_amount += invested_amount
                     logger.debug(
-                        f"Транзакция: {op_amount}, Округлено до: {rounded_amount}, Инвесткопилка: {invested_amount}")
+                        f"Транзакция: {op_amount}, Округлено до: {rounded_amount}, Инвесткопилка: {invested_amount}"
+                    )
 
         except ValueError as ve:
             logger.error(f"Ошибка парсинга даты или суммы в транзакции {transaction}: {ve}")

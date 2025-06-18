@@ -1,14 +1,11 @@
-import os
-import json
 import datetime
+import json
+import os
 import pandas as pd
 from dotenv import load_dotenv
-
-# Импортируем функции из других модулей src
-from src.views import main_page, read_transactions
 from src.reports import spending_by_weekday
-from src.services import investment_bank  # <--- убедитесь, что investment_bank импортируется
-from src.utils import get_greeting, load_user_settings
+from src.services import investment_bank
+from src.views import main_page, read_transactions
 
 
 def run_all_functionalities():
@@ -22,10 +19,10 @@ def run_all_functionalities():
     print("Переменные окружения загружены.")
 
     # --- СТРОКИ ДЛЯ ПРОВЕРКИ ---
-    #loaded_currency_key = os.getenv("CURRENCY_API_KEY")
-    #loaded_alpha_key = os.getenv("ALPHA_VANTAGE_API_KEY")
-    #print(f"CURRENCY_API_KEY из .env: {'***' + loaded_currency_key[-4:] if loaded_currency_key else 'НЕ ЗАГРУЖЕН'}")
-    #print(f"ALPHA_VANTAGE_API_KEY из .env: {'***' + loaded_alpha_key[-4:] if loaded_alpha_key else 'НЕ ЗАГРУЖЕН'}")
+    # loaded_currency_key = os.getenv("CURRENCY_API_KEY")
+    # loaded_alpha_key = os.getenv("ALPHA_VANTAGE_API_KEY")
+    # print(f"CURRENCY_API_KEY из .env: {'***' + loaded_currency_key[-4:] if loaded_currency_key else 'НЕ ЗАГРУЖЕН'}")
+    # print(f"ALPHA_VANTAGE_API_KEY из .env: {'***' + loaded_alpha_key[-4:] if loaded_alpha_key else 'НЕ ЗАГРУЖЕН'}")
     # ----------------------------------------
 
     # 2. Загрузка транзакций
@@ -78,15 +75,16 @@ def run_all_functionalities():
         # Преобразуем DataFrame в список словарей для investment_bank
         # Убедитесь, что 'Дата операции' отформатирована как 'YYYY-MM-DD'
         # И 'Сумма операции' корректна
-        transactions_for_investbank = transactions_df[['Дата операции', 'Сумма операции']].copy()
-        transactions_for_investbank['Дата операции'] = transactions_for_investbank['Дата операции'].dt.strftime(
-            '%Y-%m-%d')
+        transactions_for_investbank = transactions_df[["Дата операции", "Сумма операции"]].copy()
+        transactions_for_investbank["Дата операции"] = transactions_for_investbank["Дата операции"].dt.strftime(
+            "%Y-%m-%d"
+        )
 
         # Фильтруем транзакции для инвесткопилки по месяцу, если это необходимо для демонстрации
         # Однако investment_bank сам фильтрует по месяцу, так что можно передать все.
         # Просто убедитесь, что в файле operations.xlsx есть данные за demo_month
 
-        invested_total = investment_bank(demo_month, transactions_for_investbank.to_dict('records'), demo_limit)
+        invested_total = investment_bank(demo_month, transactions_for_investbank.to_dict("records"), demo_limit)
         print(f"Общая сумма, отложенная в инвесткопилку за {demo_month} (лимит {demo_limit}): {invested_total} руб.")
     else:
         print("Невозможно продемонстрировать инвесткопилку: нет данных транзакций.")

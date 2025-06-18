@@ -1,10 +1,11 @@
 import datetime
+import json
 import logging
-import pandas as pd
 import os
 from functools import wraps
-from typing import Optional, Callable, Any, Union
-import json
+from typing import Any, Callable, Optional
+
+import pandas as pd
 
 # Настройка логирования для модуля reports
 logger = logging.getLogger(__name__)
@@ -13,7 +14,7 @@ logger.setLevel(logging.INFO)  # Установим INFO для разработ
 # (это предотвращает многократный вывод одних и тех же сообщений)
 if not logger.handlers:
     handler = logging.StreamHandler()
-    formatter = logging.Formatter('%(levelname)s\t%(name)s:%(filename)s:%(lineno)d %(message)s')
+    formatter = logging.Formatter("%(levelname)s\t%(name)s:%(filename)s:%(lineno)d %(message)s")
     handler.setFormatter(formatter)
     logger.addHandler(handler)
 
@@ -57,7 +58,6 @@ def log_and_save_report(file_path: Optional[str] = None) -> Callable[..., Callab
             else:
                 output_file = default_file_name_full_path
 
-
             try:
                 if isinstance(result, pd.DataFrame):
                     result_to_save = result.to_json(orient="records", indent=4, force_ascii=False)
@@ -86,6 +86,7 @@ def log_and_save_report(file_path: Optional[str] = None) -> Callable[..., Callab
         # Если file_path - это не функция, значит декоратор был вызван с аргументами
         return decorator
 
+
 @log_and_save_report()
 def spending_by_weekday(transactions: pd.DataFrame, date: Optional[str] = None) -> pd.DataFrame:
     """
@@ -105,22 +106,29 @@ def spending_by_weekday(transactions: pd.DataFrame, date: Optional[str] = None) 
     # Создаем DataFrame со всеми днями недели и значениями по умолчанию
     # Это гарантирует, что все дни недели присутствуют в результате, даже если по ним нет трат
     weekday_map = {
-        0: 'Понедельник', 1: 'Вторник', 2: 'Среда', 3: 'Четверг',
-        4: 'Пятница', 5: 'Суббота', 6: 'Воскресенье'
+        0: "Понедельник",
+        1: "Вторник",
+        2: "Среда",
+        3: "Четверг",
+        4: "Пятница",
+        5: "Суббота",
+        6: "Воскресенье",
     }
-    all_weekdays_df_template = pd.DataFrame({
-        'День недели_num': list(weekday_map.keys()), # Числовой день недели
-        'День недели': list(weekday_map.values())   # Название дня недели
-    })
+    all_weekdays_df_template = pd.DataFrame(
+        {
+            "День недели_num": list(weekday_map.keys()),  # Числовой день недели
+            "День недели": list(weekday_map.values()),  # Название дня недели
+        }
+    )
 
     if transactions.empty:
         logger.warning("Пустой DataFrame транзакций передан в spending_by_weekday.")
         # Возвращаем DataFrame со всеми днями недели, но с нулевыми тратами
-        return all_weekdays_df_template.drop(columns=['День недели_num']).assign(**{'Средние траты': 0.00})
+        return all_weekdays_df_template.drop(columns=["День недели_num"]).assign(**{"Средние траты": 0.00})
 
     # Преобразование 'Дата операции' в datetime
-    transactions['Дата операции'] = pd.to_datetime(transactions['Дата операции'], errors='coerce', dayfirst=True)
-    transactions.dropna(subset=['Дата операции'], inplace=True)
+    transactions["Дата операции"] = pd.to_datetime(transactions["Дата операции"], errors="coerce", dayfirst=True)
+    transactions.dropna(subset=["Дата операции"], inplace=True)
 
     current_date_dt: datetime.datetime
     if date:
@@ -140,60 +148,59 @@ def spending_by_weekday(transactions: pd.DataFrame, date: Optional[str] = None) 
 
     # Фильтруем транзакции за последние три месяца
     filtered_transactions = transactions[
-        (transactions['Дата операции'] >= three_months_ago) &
-        (transactions['Дата операции'] <= current_date)
-        ].copy()
+        (transactions["Дата операции"] >= three_months_ago) & (transactions["Дата операции"] <= current_date)
+    ].copy()
 
     if filtered_transactions.empty:
         logger.info(f"Нет транзакций за последние 3 месяца до {current_date.strftime('%Y-%m-%d')}.")
         # Возвращаем DataFrame со всеми днями недели, но с нулевыми тратами
-        return all_weekdays_df_template.drop(columns=['День недели_num']).assign(**{'Средние траты': 0.00})
+        return all_weekdays_df_template.drop(columns=["День недели_num"]).assign(**{"Средние траты": 0.00})
 
     # Извлекаем день недели (0=понедельник, 6=воскресенье)
-    filtered_transactions['День недели'] = filtered_transactions['Дата операции'].dt.dayofweek
+    filtered_transactions["День недели"] = filtered_transactions["Дата операции"].dt.dayofweek
 
     # Фильтруем только траты (отрицательные суммы)
-    spending_transactions = filtered_transactions[filtered_transactions['Сумма операции'] < 0].copy()
+    spending_transactions = filtered_transactions[filtered_transactions["Сумма операции"] < 0].copy()
 
     if spending_transactions.empty:
         logger.info("Нет трат за последние 3 месяца.")
         # Если нет трат, возвращаем DataFrame со всеми днями недели и нулевыми тратами
-        return all_weekdays_df_template.drop(columns=['День недели_num']).assign(**{'Средние траты': 0.00})
-
+        return all_weekdays_df_template.drop(columns=["День недели_num"]).assign(**{"Средние траты": 0.00})
 
     # Группируем по числовому дню недели и считаем среднее значение (используя abs() для положительных трат)
-    daily_avg_spending_raw = spending_transactions.groupby('День недели')['Сумма операции'].apply(
-        lambda x: abs(x).mean()).reset_index()
-    daily_avg_spending_raw.rename(columns={'Сумма операции': 'Средние траты'}, inplace=True)
-
+    daily_avg_spending_raw = (
+        spending_transactions.groupby("День недели")["Сумма операции"].apply(lambda x: abs(x).mean()).reset_index()
+    )
+    daily_avg_spending_raw.rename(columns={"Сумма операции": "Средние траты"}, inplace=True)
 
     # Объединяем с DataFrame всех дней недели, чтобы гарантировать наличие всех дней.
     # Используем числовой день недели для объединения.
     # Сначала daily_avg_spending_raw['День недели'] нужно преобразовать в названия
-    daily_avg_spending_raw['День недели_name'] = daily_avg_spending_raw['День недели'].map(weekday_map)
+    daily_avg_spending_raw["День недели_name"] = daily_avg_spending_raw["День недели"].map(weekday_map)
 
     # Объединяем с all_weekdays_df_template по названию дня недели
     daily_avg_spending = pd.merge(
         all_weekdays_df_template,
-        daily_avg_spending_raw[['День недели_name', 'Средние траты']],
-        left_on='День недели',
-        right_on='День недели_name',
-        how='left'
+        daily_avg_spending_raw[["День недели_name", "Средние траты"]],
+        left_on="День недели",
+        right_on="День недели_name",
+        how="left",
     )
     # Удаляем вспомогательный столбец
-    daily_avg_spending.drop(columns=['День недели_num', 'День недели_name'], inplace=True)
+    daily_avg_spending.drop(columns=["День недели_num", "День недели_name"], inplace=True)
 
     # Заполняем NaN (для дней без трат) нулями
-    daily_avg_spending['Средние траты'] = daily_avg_spending['Средние траты'].fillna(0.00)
-
+    daily_avg_spending["Средние траты"] = daily_avg_spending["Средние траты"].fillna(0.00)
 
     # Упорядочиваем по дням недели (используя категориальный тип для сохранения порядка)
-    ordered_weekdays = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье']
-    daily_avg_spending['День недели'] = pd.Categorical(daily_avg_spending['День недели'], categories=ordered_weekdays, ordered=True)
-    daily_avg_spending = daily_avg_spending.sort_values('День недели').reset_index(drop=True)
+    ordered_weekdays = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"]
+    daily_avg_spending["День недели"] = pd.Categorical(
+        daily_avg_spending["День недели"], categories=ordered_weekdays, ordered=True
+    )
+    daily_avg_spending = daily_avg_spending.sort_values("День недели").reset_index(drop=True)
 
     # Округляем средние траты до двух знаков после запятой
-    daily_avg_spending['Средние траты'] = daily_avg_spending['Средние траты'].round(2)
+    daily_avg_spending["Средние траты"] = daily_avg_spending["Средние траты"].round(2)
 
     logger.info("Отчет 'Траты по дням недели' успешно сформирован.")
 

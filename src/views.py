@@ -1,9 +1,10 @@
-import pandas as pd
-import json
 import datetime
+import json
 import logging
-from typing import List, Dict, Any, Optional
 import os
+from typing import Any, Dict, List
+
+import pandas as pd
 import requests
 from dotenv import load_dotenv
 
@@ -15,9 +16,9 @@ load_dotenv()
 
 # Настройка логирования
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.ERROR) # Уровень логирования можно изменить на INFO для отладки
+logger.setLevel(logging.ERROR)  # Уровень логирования можно изменить на INFO для отладки
 handler = logging.StreamHandler()
-formatter = logging.Formatter('%(levelname)s\t%(name)s:%(filename)s:%(lineno)d %(message)s')
+formatter = logging.Formatter("%(levelname)s\t%(name)s:%(filename)s:%(lineno)d %(message)s")
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
@@ -54,7 +55,7 @@ def fetch_currency_rates(user_currencies: List[str]) -> List[Dict[str, Any]]:
     params = {
         "apikey": api_key,
         "base_currency": "RUB",
-        "currencies": ",".join(user_currencies) if user_currencies else ""
+        "currencies": ",".join(user_currencies) if user_currencies else "",
     }
 
     try:
@@ -66,10 +67,7 @@ def fetch_currency_rates(user_currencies: List[str]) -> List[Dict[str, Any]]:
         if "data" in data:
             for currency_code in user_currencies:
                 if currency_code in data["data"]:
-                    rates.append({
-                        "currency": currency_code,
-                        "rate": round(data["data"][currency_code]["value"], 2)
-                    })
+                    rates.append({"currency": currency_code, "rate": round(data["data"][currency_code]["value"], 2)})
                 else:
                     logger.warning(f"Курс для валюты {currency_code} не найден в ответе API.")
                     rates.append({"currency": currency_code, "rate": None})
@@ -80,6 +78,7 @@ def fetch_currency_rates(user_currencies: List[str]) -> List[Dict[str, Any]]:
     except Exception as e:
         logger.error(f"Непредвиденная ошибка при получении курсов валют: {e}")
     return []
+
 
 def fetch_stock_prices(user_stocks: List[str]) -> List[Dict[str, Any]]:
     """
@@ -96,7 +95,7 @@ def fetch_stock_prices(user_stocks: List[str]) -> List[Dict[str, Any]]:
     for stock_symbol in user_stocks:
         url = "https://www.alphavantage.co/query"
         params = {
-            "function": "GLOBAL_QUOTE", # Функция для получения текущей котировки
+            "function": "GLOBAL_QUOTE",  # Функция для получения текущей котировки
             "symbol": stock_symbol,
             "apikey": api_key,
         }
@@ -114,7 +113,9 @@ def fetch_stock_prices(user_stocks: List[str]) -> List[Dict[str, Any]]:
                 logger.warning(f"Ошибка API Alpha Vantage для акции {stock_symbol}: {data['Error Message']}")
                 stock_prices.append({"stock": stock_symbol, "price": None})
             else:
-                logger.warning(f"Не удалось получить данные для акции {stock_symbol}. Неожиданный формат ответа: {data}")
+                logger.warning(
+                    f"Не удалось получить данные для акции {stock_symbol}. Неожиданный формат ответа: {data}"
+                )
                 stock_prices.append({"stock": stock_symbol, "price": None})
 
         except requests.exceptions.RequestException as e:
@@ -126,7 +127,7 @@ def fetch_stock_prices(user_stocks: List[str]) -> List[Dict[str, Any]]:
     return stock_prices
 
 
-def main_page(date_time_str: str) -> str: # <--- Меняем тип возвращаемого значения на str
+def main_page(date_time_str: str) -> str:  # <--- Меняем тип возвращаемого значения на str
     """
     Формирует данные для главной страницы на основе транзакций, курсов валют и цен акций
     и возвращает их в виде JSON-строки.
@@ -138,13 +139,17 @@ def main_page(date_time_str: str) -> str: # <--- Меняем тип возвр�
         except ValueError:
             logger.error(f"Некорректный формат даты/времени: {date_time_str}")
             # Возвращаем JSON-строку даже в случае ошибки
-            return json.dumps({
-                "greeting": "Ошибка: Некорректная дата",
-                "cards": [],
-                "top_transactions": [],
-                "currency_rates": [],
-                "stock_prices": [],
-            }, indent=4, ensure_ascii=False)
+            return json.dumps(
+                {
+                    "greeting": "Ошибка: Некорректная дата",
+                    "cards": [],
+                    "top_transactions": [],
+                    "currency_rates": [],
+                    "stock_prices": [],
+                },
+                indent=4,
+                ensure_ascii=False,
+            )
 
         # Теперь передавайте current_datetime в get_greeting
         greeting = get_greeting(current_datetime)
@@ -157,22 +162,30 @@ def main_page(date_time_str: str) -> str: # <--- Меняем тип возвр�
 
         if not isinstance(transactions_df, pd.DataFrame):
             logger.error("read_transactions did not return a DataFrame.")
-            return json.dumps({ # <--- Возвращаем JSON-строку
-                "greeting": "Ошибка при загрузке данных",
-                "cards": [],
-                "top_transactions": [],
-                "currency_rates": [],
-                "stock_prices": [],
-            }, indent=4, ensure_ascii=False)
+            return json.dumps(
+                {  # <--- Возвращаем JSON-строку
+                    "greeting": "Ошибка при загрузке данных",
+                    "cards": [],
+                    "top_transactions": [],
+                    "currency_rates": [],
+                    "stock_prices": [],
+                },
+                indent=4,
+                ensure_ascii=False,
+            )
 
         if transactions_df.empty:
-            return json.dumps({ # <--- Возвращаем JSON-строку
-                "greeting": greeting,
-                "cards": [],
-                "top_transactions": [],
-                "currency_rates": fetch_currency_rates(user_currencies),
-                "stock_prices": fetch_stock_prices(user_stocks),
-            }, indent=4, ensure_ascii=False)
+            return json.dumps(
+                {  # <--- Возвращаем JSON-строку
+                    "greeting": greeting,
+                    "cards": [],
+                    "top_transactions": [],
+                    "currency_rates": fetch_currency_rates(user_currencies),
+                    "stock_prices": fetch_stock_prices(user_stocks),
+                },
+                indent=4,
+                ensure_ascii=False,
+            )
 
         # Преобразование колонок к правильным типам
         if "Дата операции" in transactions_df.columns:
@@ -189,15 +202,22 @@ def main_page(date_time_str: str) -> str: # <--- Меняем тип возвр�
         else:
             transactions_df["Дата платежа"] = pd.Series(pd.NaT, index=transactions_df.index)
 
-        numeric_cols = ["Сумма операции", "Сумма платежа", "Кешбэк", "Бонусы (включая кешбэк)",
-                        "Округление на инвесткопилку", "Сумма операции с округлением", "MCC"]
+        numeric_cols = [
+            "Сумма операции",
+            "Сумма платежа",
+            "Кешбэк",
+            "Бонусы (включая кешбэк)",
+            "Округление на инвесткопилку",
+            "Сумма операции с округлением",
+            "MCC",
+        ]
         for col in numeric_cols:
             if col in transactions_df.columns:
                 transactions_df[col] = pd.to_numeric(
-                    transactions_df[col].astype(str).str.replace(',', '.'), errors='coerce'
+                    transactions_df[col].astype(str).str.replace(",", "."), errors="coerce"
                 ).fillna(0.0)
             else:
-                transactions_df[col] = pd.Series(0.0, index=transactions_df.index, dtype='float64')
+                transactions_df[col] = pd.Series(0.0, index=transactions_df.index, dtype="float64")
 
         # Обработка "Номер карты"
         if "Номер карты" in transactions_df.columns:
@@ -206,37 +226,49 @@ def main_page(date_time_str: str) -> str: # <--- Меняем тип возвр�
                 lambda x: f"**{str(x)[-4:]}" if pd.notna(x) and len(str(x)) >= 4 else None
             )
         else:
-            transactions_df["Последние 4 цифры карты"] = pd.Series([None] * len(transactions_df), index=transactions_df.index, dtype='object')
+            transactions_df["Последние 4 цифры карты"] = pd.Series(
+                [None] * len(transactions_df), index=transactions_df.index, dtype="object"
+            )
 
         # === Фильтрация данных по дате ===
         start_of_month = current_datetime.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
         transactions_df_filtered = transactions_df[
-            (transactions_df["Дата операции"] >= start_of_month) &
-            (transactions_df["Дата операции"] <= current_datetime)
+            (transactions_df["Дата операции"] >= start_of_month)
+            & (transactions_df["Дата операции"] <= current_datetime)
         ].copy()
 
         # Если после фильтрации DataFrame стал пустым, возвращаем базовый ответ
         if transactions_df_filtered.empty:
-            return json.dumps({ # <--- Возвращаем JSON-строку
-                "greeting": greeting,
-                "cards": [],
-                "top_transactions": [],
-                "currency_rates": fetch_currency_rates(user_currencies),
-                "stock_prices": fetch_stock_prices(user_stocks),
-            }, indent=4, ensure_ascii=False)
+            return json.dumps(
+                {  # <--- Возвращаем JSON-строку
+                    "greeting": greeting,
+                    "cards": [],
+                    "top_transactions": [],
+                    "currency_rates": fetch_currency_rates(user_currencies),
+                    "stock_prices": fetch_stock_prices(user_stocks),
+                },
+                indent=4,
+                ensure_ascii=False,
+            )
 
         # Фильтрация только трат (отрицательная сумма платежа)
-        if "Сумма платежа" not in transactions_df_filtered.columns or not pd.api.types.is_numeric_dtype(transactions_df_filtered["Сумма платежа"]):
-            transactions_df_filtered["Сумма платежа"] = pd.Series(0.0, index=transactions_df_filtered.index, dtype='float64')
+        if "Сумма платежа" not in transactions_df_filtered.columns or not pd.api.types.is_numeric_dtype(
+            transactions_df_filtered["Сумма платежа"]
+        ):
+            transactions_df_filtered["Сумма платежа"] = pd.Series(
+                0.0, index=transactions_df_filtered.index, dtype="float64"
+            )
 
         spending_transactions = transactions_df_filtered[transactions_df_filtered["Сумма платежа"] < 0].copy()
-
 
         # Группировка и подсчет для сводки по картам
         cards_summary = []
         if not spending_transactions.empty:
-            if "Последние 4 цифры карты" in spending_transactions.columns and spending_transactions["Последние 4 цифры карты"].notna().any():
+            if (
+                "Последние 4 цифры карты" in spending_transactions.columns
+                and spending_transactions["Последние 4 цифры карты"].notna().any()
+            ):
                 card_groups = spending_transactions.groupby("Последние 4 цифры карты", dropna=True)
                 for card_digits, group in card_groups:
                     total_spent = abs(group["Сумма платежа"].sum())
@@ -285,10 +317,14 @@ def main_page(date_time_str: str) -> str: # <--- Меняем тип возвр�
     except Exception as e:
         logger.error(f"Произошла непредвиденная ошибка в main_page: {e}")
         # Возвращаем JSON-строку даже в случае ошибки
-        return json.dumps({
-            "greeting": "Ошибка при загрузке данных",
-            "cards": [],
-            "top_transactions": [],
-            "currency_rates": [],
-            "stock_prices": [],
-        }, indent=4, ensure_ascii=False)
+        return json.dumps(
+            {
+                "greeting": "Ошибка при загрузке данных",
+                "cards": [],
+                "top_transactions": [],
+                "currency_rates": [],
+                "stock_prices": [],
+            },
+            indent=4,
+            ensure_ascii=False,
+        )
